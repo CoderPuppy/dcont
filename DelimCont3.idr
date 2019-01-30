@@ -16,6 +16,13 @@ record ContT sfd dfd r (ps : List (sfd, Type, Type)) (m : Type -> Type) a where
 	constructor MkContT
 	runContT : Cont sfd dfd (m r) ps a
 
+fRet : Lens
+	(Frame sfd dfd r sd ps rt1 jt)
+	(Frame sfd dfd r sd ps rt2 jt)
+	(rt1 -> Frames sfd dfd r ps -> r)
+	(rt2 -> Frames sfd dfd r ps -> r)
+fRet i = Mor $ \(MkFrame dd ret jmp) => map (\ret' => MkFrame dd ret' jmp) $ applyMor i ret
+
 Functor (Cont sfd dfd r ps) where
 	map f a = MkCont $ \k, fs => runCont a (k . f) fs
 Applicative (Cont sfd dfd r ps) where
@@ -79,6 +86,8 @@ control :
 	Cont sfd dfd r ps a
 control pr f =
 	MkCont $ \ka, fs => runCont
-		(f $ \a => MkCont $ \rk, fs' => ka a $ set (prPostFs pr) fs' fs)
+		(f $ \a => MkCont $ \rk, fs' => ka a $
+			over (prPostFs pr . fsHead) (\f => record { ret = \r, fs => rk r (f :: fs) } f) $
+			set (prPostFs pr) fs' fs)
 		(Frame.jmp $ view (prPostFs pr . fsHead) fs)
 		(view (prPostFs pr . fsTail) fs)
