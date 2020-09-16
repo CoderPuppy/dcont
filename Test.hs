@@ -272,7 +272,6 @@ shift0 ::
 shift0 pr f = jumpOut pr $ \k -> f $ reset dd . k
 	where dd = error "TODO"
 
-
 -- inFrame dd rk jk enter exit (jumpOut PRHead f >>= k)
 -- = exit True *> f (\v -> enter *> k) >>= jk
 -- where E contains no inFrames
