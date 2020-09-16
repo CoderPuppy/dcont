@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-tabs #-}
 
-module LamCo where
+module Machine1 where
 
 import Debug.Trace
 

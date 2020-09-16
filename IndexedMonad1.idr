@@ -1,4 +1,4 @@
-module Test
+module IndexedMonad1
 
 import Control.Monad.Identity
 
@@ -86,9 +86,9 @@ Functor (Cont r st1 st2) where
 	map f k = MkCont $ \s1, kb => runCont k s1 $ kb . f
 Applicative (Cont r st st) where
 	pure a = MkCont $ \s, k => k a s
-	(<*>) = Test.(<*>)
+	(<*>) = IndexedMonad1.(<*>)
 Monad (Cont r st st) where
-	(>>=) = Test.(>>=)
+	(>>=) = IndexedMonad1.(>>=)
 	join = (>>= id)
 
 -- idea: erasing a frame and adding an erased frame are always fine

@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-tabs #-}
 
-module LamCo2 where
+module Machine2 where
 
 import Numeric.Natural
 

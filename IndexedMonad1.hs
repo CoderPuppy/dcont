@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wno-tabs #-}
 {-# LANGUAGE GADTs, PolyKinds, KindSignatures, DataKinds, TypeOperators, RankNTypes, ScopedTypeVariables #-}
 
-module Test2 where
+module IndexedMonad1 where
 
 import Data.Kind
 import Control.Lens
