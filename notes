@@ -1,0 +1,206 @@
+shift/reset
+	λx.e → λx.λk.e
+	x → k x
+	f a → f (λf'. a (λa'. f' a' k))
+	reset e → k (e (λv. v))
+	shift f → f (λf'. f' (λv k'. k' (k v)) (λv. v))
+
+control/prompt
+	prompt e → either (uncurry ($)) id (reset (Right e))
+	control f → 
+
+	λx.e → λx.λk.λt.e k t
+	x → λk.λt.k x t
+	f a → λk.λt.f (λf'.λt₁. a (λa'.λt₂.f' a' k t₂) t₁) t
+	prompt e → λk.λt.k (e (λv.λt.v) ?) t
+
+	prompt e → λk.λt. k
+		(e
+			(λv.λt. case t of { Nothing => v, Just k => k v Nothing })
+			Nothing)
+		t
+	control e → λk.λt. e
+		(λx.λk'.λt'. k x (case t of {
+			Nothing => case t' of {
+				Nothing => k',
+				Just k'' => λv.λt''. k' v 
+			}
+		})))
+		(λv.λt. case t of { Nothing => v, Just k => k v Nothing })
+		Nothing
+	
+	prompt e → (reset (let v = e in λt. maybe v (λt. t v Nothing))) Nothing
+	control e → shift (λk. λt. (reset ?) Nothing)
+
+shift0/reset0
+	reset0 e → shift λk.λlk. (reset (let v = e in λlk. match lk { [] -> v, k ∷ lk -> k v lk })) (k ∷ lk)
+	shift0 e → shift λk.λ(k' ∷ lk). (reset (k' (e λx. shift λk'.λlk'. k x (k' ∷ lk')))) lk
+
+w
+	[Int → ?, μ₁] ⋄ [Bool → ?] = μ₂
+	μ₂ = [Int → ?]
+	[Bool → ?] = μ₁
+
+	[Int → ?, Bool → ?] ⋄ [Bool → ?] = [Int → ?]
+
+	(λk.λt[]. -- prompt
+		k
+			(
+				(λk[Int → ?, Int → ?].λt[]. -- 1
+					(λk[Int → ?, Int → ?, Bool → String].λt[]. -- control
+						(λf.λk[Bool → String, Bool → String].λt[].
+							f 5
+								(λv:Int.λt[Bool → String].
+									k[Bool → String, Bool → String] (v == 0) t
+								)
+								t[]
+						)
+							(λx:Int.λk'[Int → ?, Bool → String].λt'[].
+								k[Int → ?, Int → ?, Bool → String] x (cons t[] (cons k'[Int → ?, Bool → String] t'[]))
+							)
+							kId[Bool → String, Bool → String]
+							()
+					)
+						(λa:Int.λt[Int → ?, Bool → String]. -- 2
+							(λk[Int → ?, Int → ?].λt[Int → ?, Bool → String]. -- control
+								(λf.λk[String → String].λt[].
+									f 8
+										(λv:Bool.λt[].
+											k[String → String] (show v) t[]
+										)
+										t[]
+								)
+									(λx:Int.λk'[Bool → String].λt'[].
+										k[Int → ?, Int → ?] x (cons t[Int → ?, Bool → String] (cons k'[Bool → String] t'[]))
+									)
+									kId[String → String]
+									()
+							)
+								(λb:Int.λt[Int → ?]. -- 3
+									k[Int → ?, Int → ?] (a + b) t[Int → ?]
+								)
+								t[Int → ?, Bool → String]
+						)
+						t[]
+				)
+					kId[Int → ?, Int → ?]
+					()
+			)
+			t[]
+	)
+		kId
+		()
+
+w
+	prompt (control (λk. k 5 == 0) + control (λk. show (k 8)))
+	h (reset (HV (control (λk. k 5 == 0) + control (λk. show (k 8)))))
+	h (reset (HV (shift (λk.H (h' ○ k) (λk. k 5 == 0)) + control (λk. show (k 8)))))
+	h (reset (H (λx. h' (HV (x + control (λk. show (k 8))))) (λk. k 5 == 0)))
+	h (H (λx. h' (HV (x + control (λk. show (k 8))))) (λk. k 5 == 0))
+	prompt ((λk. k 5 == 0) (λx. h' (HV (x + control (λk. show (k 8))))))
+	prompt (h' (HV (5 + control (λk. show (k 8)))) == 0)
+	prompt (h' (HV (5 + shift (λk. H (h' ○ k) (λk. show (k 8))))) == 0)
+	prompt (H (λx. h' (HV (5 + x)) == 0) (λk. show (k 8)))
+
+w
+	f1 = CPS
+	f2 = CPS
+	j2 = β1
+	k3 = α1
+	β2 = α2
+	InterpV 'PropShift (HV Int) α2 α2 = Int
+	InterpV 'PropShift (H (Int -> CPS α2 α2 Int) ((Int -> CPS j1 k1 Bool) -> CPS j1 k1 String)) β1 α1 = Int
+	α1 = Bool
+	InterpV 'Stop (H (Int -> CPS β1 Bool Int) ((Int -> CPS β1 Bool Int) -> CPS β1 Bool Bool)) β3 α3 = β1
+	β3 = α3
+	-- occurs check!
+	β1 = H (Int -> CPS α2 α2 Int) ((Int -> CPS β1 Bool Int) -> CPS β1 Bool Bool)
+	(
+		Interp 'Stop
+			(H
+				(Int -> CPS β1 Bool Int)
+				((Int -> CPS β1 Bool Int) -> CPS β1 Bool Bool))
+			α3 α3,
+		Interp 'PropShift
+			(H
+				(Int -> CPS α2 α2 Int)
+				((Int -> CPS j1 k1 Bool) -> CPS j1 k1 String))
+			β1 Bool,
+		Interp 'PropShift (HV Int) α2 α2,
+		IxFunctor CPS,
+		IxFunctor CPS
+	) =>
+		CPS α3 α3 β1
+
+w
+	f1 = CPS
+	f2 = CPS
+	β2 = α2
+	InterpV 'PropShift (HV Int) α2 α2 = Int
+	+1
+	β1 = (H (Int -> CPS α2 k (InterpV 'PropShift α1 α2 k)) ((Int -> CPS j1 k1 Bool) -> CPS j1 k1 String))
+	InterpV 'PropShift (H (Int -> CPS α2 α2 Int) ((Int -> CPS j1 k1 Bool) -> CPS j1 k1 String)) (H (Int -> CPS α2 k (InterpV 'PropShift α1 α2 k)) ((Int -> CPS j1 k1 Bool) -> CPS j1 k1 String)) α1 = Int
+	+2
+	j1 = α2
+	k1 = k
+	?1
+	k = HV String
+	j2 = (H (Int -> CPS α2 (HV String) (InterpV 'PropShift α1 α2 (HV String))) ((Int -> CPS α2 (HV String) Bool) -> CPS α2 (HV String) String))
+	+3
+	InterpV 'Stop (H (Int -> CPS (H (Int -> CPS α2 (HV String) (InterpV 'PropShift α1 α2 (HV String))) ((Int -> CPS α2 (HV String) Bool) -> CPS α2 (HV String) String)) α1 Int) ( (Int -> CPS (H (Int -> CPS α2 (HV String) (InterpV 'PropShift α1 α2 (HV String))) ((Int -> CPS α2 (HV String) Bool) -> CPS α2 (HV String) String)) k3 Int) -> CPS (H (Int -> CPS α2 (HV String) (InterpV 'PropShift α1 α2 (HV String))) ((Int -> CPS α2 (HV String) Bool) -> CPS α2 (HV String) String)) k3 Bool)) β3 α3 = InterpV 'Stop (H (Int -> CPS α2 (HV String) (InterpV 'PropShift α1 α2 (HV String))) ((Int -> CPS α2 (HV String) Bool) -> CPS α2 (HV String) String)) β3 α3
+	InterpV 'Stop (H (Int -> CPS α2 (HV String) (InterpV 'PropShift α1 α2 (HV String))) ((Int -> CPS α2 (HV String) Bool) -> CPS α2 (HV String) String)) β3 α3 = InterpV 'Stop α2 β3 α3
+	assume α1 = HV Bool
+	α2 = HV String
+	β3 = α3
+	InterpV 'Stop (HV String) α3 α3 = String
+	(
+		+1 Interp 'PropShift (HV Bool) (HV String) (HV String),
+		+2 Interp 'Stop
+			(H
+				(Int -> CPS (HV String) (HV String)
+					(InterpV 'PropShift (HV Bool) (HV String) (HV String)))
+				((Int -> CPS (HV String) (HV String) Bool) ->
+					CPS (HV String) (HV String) String))
+			α3 α3,
+		?1 InterpV 'PropShift (HV Bool) (HV String) (HV String) ~ Bool,
+		+3 Interp 'Stop (HV String) α3 α3,
+		Interp 'Stop
+			(H
+				(Int -> CPS
+					(H
+						(Int -> CPS (HV String) (HV String)
+							(InterpV 'PropShift (HV Bool) (HV String) (HV String)))
+						((Int -> CPS (HV String) (HV String) Bool) ->
+							CPS (HV String) (HV String) String))
+					(HV Bool) Int)
+				(
+					(Int -> CPS
+						(H
+							(Int -> CPS (HV String) (HV String)
+								(InterpV 'PropShift (HV Bool) (HV String) (HV String)))
+							((Int -> CPS (HV String) (HV String) Bool) ->
+								CPS (HV String) (HV String) String))
+						k3 Int) ->
+					CPS
+						(H
+							(Int -> CPS (HV String) (HV String)
+								(InterpV 'PropShift (HV Bool) (HV String) (HV String)))
+							((Int -> CPS (HV String) (HV String) Bool) ->
+								CPS (HV String) (HV String) String)) k3 Bool))
+			α3 α3,
+		Interp 'PropShift
+			(H
+				(Int -> CPS (HV String) (HV String) Int)
+				((Int -> CPS (HV String) (HV String) Bool) ->
+					CPS (HV String) (HV String) String))
+			(H
+				(Int -> CPS (HV String) (HV String)
+					(InterpV 'PropShift (HV Bool) (HV String) (HV String)))
+				((Int -> CPS (HV String) (HV String) Bool) ->
+					CPS (HV String) (HV String) String))
+			(HV Bool),
+		Interp 'PropShift (HV Int) (HV String) (HV String),
+		IxFunctor CPS,
+		IxFunctor CPS
+	) =>
+	CPS α3 α3 String
