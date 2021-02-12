@@ -61,14 +61,6 @@ namespace frames
 	export
 	Frame (FErased r rst rt) where
 		frameTail i fr = map (\i => record { tail = i } fr) $ i $ fr.tail
-	export
-	data FFix : (stt : Type -> Type) -> (st : Type) -> Type where
-		Z :                     st  -> FFix stt st
-		S : stt (FFix stt st) -> FFix stt st
-	export
-	Frame stt => Frame (FFix stt) where
-		frameTail i (Z s) = map Z $ i s
-		frameTail i (S s) = map S $ frameTail (frameTail i) s
 
 record Cont (r : Type) (st1, st2 : Type) (a : Type) where
 	constructor MkCont
@@ -195,47 +187,47 @@ Show PlainShow where
 debug : StackShow st => String -> Cont (IO r) st st ()
 debug l = MkCont $ \s, k => putStrLn (l ++ " " ++ show (map MkPlainShow $ stackShow s)) *> k () s
 
-test : Cont (IO ()) () () ()
-test = do
-	liftIO $ putStrLn "hello world"
-	debug "1" -- []
-	inFrame
-		{r=IO ()}
-		{rt=()} {jt=()}
-		{sdt=String} {ddt=const String}
-		{rst=FErased (IO ()) () () ()} {jst=()}
-		{st1=()} {st2=()}
-		"a" "a" pure pure $ do
-		debug "2" -- [pa]
-		jumpOut
-			{r=IO ()} {a=()}
-			{sdt=String} {ddt=const String}
-			{p=MkPrompt "a" () () (FErased (IO ()) () () ()) ()}
-			{st1=()}
-			{st2=FPrompt String (const String) (IO ()) (MkPrompt "b" () () () ()) ()}
-			{stt=id} id $ \ka => do
-			debug "3" -- []
-			inFrame
-				{r=IO ()}
-				{rt=()} {jt=()}
-				{sdt=String} {ddt=const String}
-				{rst=()} {jst=()}
-				{st1=()} {st2=()}
-				"b" "b" pure pure $ do
-				debug "4" -- [pb]
-				ka ()
-				debug "5" -- [eb]
-			debug "6" -- []
-		debug "7" -- [ea, pb]
-		jumpOut
-			{r=IO ()} {a=()}
-			{sdt=String} {ddt=const String}
-			{p=MkPrompt "b" () () () ()}
-			{st1=()} {st2=()}
-			{stt=FErased (IO ()) (FErased (IO ()) () () ()) ()} ?t
-			$ \kb => do
-				debug "8" -- []
-				kb ()
-				debug "9" -- []
-		debug "10" -- [ea, eb]
-	debug "11" -- []
+-- test : Cont (IO ()) () () ()
+-- test = do
+-- 	liftIO $ putStrLn "hello world"
+-- 	debug "1" -- []
+-- 	inFrame
+-- 		{r=IO ()}
+-- 		{rt=()} {jt=()}
+-- 		{sdt=String} {ddt=const String}
+-- 		{rst=FErased (IO ()) () () ()} {jst=()}
+-- 		{st1=()} {st2=()}
+-- 		"a" "a" pure pure $ do
+-- 		debug "2" -- [pa]
+-- 		jumpOut
+-- 			{r=IO ()} {a=()}
+-- 			{sdt=String} {ddt=const String}
+-- 			{p=MkPrompt "a" () () (FErased (IO ()) () () ()) ()}
+-- 			{st1=()}
+-- 			{st2=FPrompt String (const String) (IO ()) (MkPrompt "b" () () () ()) ()}
+-- 			{stt=id} id $ \ka => do
+-- 			debug "3" -- []
+-- 			inFrame
+-- 				{r=IO ()}
+-- 				{rt=()} {jt=()}
+-- 				{sdt=String} {ddt=const String}
+-- 				{rst=()} {jst=()}
+-- 				{st1=()} {st2=()}
+-- 				"b" "b" pure pure $ do
+-- 				debug "4" -- [pb]
+-- 				ka ()
+-- 				debug "5" -- [eb]
+-- 			debug "6" -- []
+-- 		debug "7" -- [ea, pb]
+-- 		jumpOut
+-- 			{r=IO ()} {a=()}
+-- 			{sdt=String} {ddt=const String}
+-- 			{p=MkPrompt "b" () () () ()}
+-- 			{st1=()} {st2=()}
+-- 			{stt=FErased (IO ()) (FErased (IO ()) () () ()) ()} ?t
+-- 			$ \kb => do
+-- 				debug "8" -- []
+-- 				kb ()
+-- 				debug "9" -- []
+-- 		debug "10" -- [ea, eb]
+-- 	debug "11" -- []
