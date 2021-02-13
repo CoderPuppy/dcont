@@ -95,6 +95,55 @@ shift' ::
 	f -> CPS (H (τ -> CPS β α (InterpV strat h β α)) f) h τ
 shift' f = shift \k -> ireturn $ H (interp @strat <<=<< k) f
 
+-- this is more complicated than I thought
+class DynamicWind h i k where
+	type DynamicWindA h i k :: Type
+	type DynamicWindV h i k :: Type
+	dynamicWind ::
+		CPS i j b ->
+		CPS h (HV τ) τ ->
+		CPS j k a ->
+		CPS i (DynamicWindA h i k) (DynamicWindV h i k)
+instance DynamicWind (HV τ) i k where
+	type DynamicWindA (HV τ) i k = k
+	type DynamicWindV (HV τ) i k = τ
+	dynamicWind before body after =
+		before >>>= \_ ->
+		reset (imap HV body) >>>= \(HV res) ->
+		after >>>= \_ ->
+		ireturn res
+instance
+	(
+		DynamicWind h i k,
+		DynamicWindA h i k ~ a
+	) =>
+	DynamicWind
+		(H
+			(τ -> CPS h (HV τ') τ')
+			((τ -> CPS i a k') -> CPS k σ σ))
+		i k
+	where
+		type DynamicWindA
+			(H
+				(τ -> CPS h (HV τ') τ')
+				((τ -> CPS i a k') -> CPS k σ σ))
+			i k
+			= k'
+		type DynamicWindV
+			(H
+				(τ -> CPS h (HV τ') τ')
+				((τ -> CPS i a k') -> CPS k σ σ))
+			i k
+			= DynamicWindV h i k
+		dynamicWind before body after =
+			before >>>= \_ ->
+			reset (imap HV body) >>>= \(H k f) ->
+			after >>>= \_ ->
+			shift \k' -> f \x ->
+				dynamicWind before (k x) after >>>= \y ->
+				k' y
+
+{-
 test :: forall α. CPS α α String
 test = reset'
 	@'Stop
@@ -170,3 +219,4 @@ test2 = reset' @'PropReset
 			)
 			>>>= \(a :: Int) -> ireturn @CPS (a * 10)
 	)
+-- -}

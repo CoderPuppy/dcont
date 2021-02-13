@@ -210,3 +210,14 @@ next steps
 	inferability of Types1 and Types4
 	multi-prompt continuations (in the style of Types3 (Shan) and/or Types4 (Kiselyov))
 	dynamic-wind in Types4 (see github.com/rain-1/continuations-study-group/wiki/Topics#dynamic-wind)
+
+dynamic-wind
+	(define (go before th after)
+		(before)
+		(define res (th))
+		(after)
+		(if (yield? res)
+			(begin
+				(define reenter (shift k (make-yield (yield-v res) k)))
+				(go before (lambda () ((yield-k res) reenter)) after))
+			res))
