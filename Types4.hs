@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wno-tabs #-}
 {-# LANGUAGE BlockArguments, LambdaCase, GADTs, PolyKinds, DataKinds, TypeOperators, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts, ScopedTypeVariables, TypeApplications, AllowAmbiguousTypes, RankNTypes #-}
 
-module Types3 where
+module Types4 where
 
 import Control.Monad.Indexed
 import Data.Kind
@@ -58,8 +58,8 @@ data Propogate = PropReset | PropShift
 instance β ~ α => Interp 'PropReset (HV τ) β α where
 	type InterpV 'PropReset (HV τ) β α = τ
 	interp (HV v) = ireturn v
-instance Interp 'PropReset (H k (k -> CPS β α τ)) β α where
-	type InterpV 'PropReset (H k (k -> CPS β α τ)) β α = τ
+instance (k' ~ k, β' ~ β, α' ~ α) => Interp 'PropReset (H k (k' -> CPS β' α' τ)) β α where
+	type InterpV 'PropReset (H k (k' -> CPS β' α' τ)) β α = τ
 	interp (H k f) = f k
 instance β ~ α => Interp 'PropShift (HV τ) β α where
 	type InterpV 'PropShift (HV τ) β α = τ
