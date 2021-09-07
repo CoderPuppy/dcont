@@ -1,3 +1,15 @@
+papers
+	A Functional Abstraction of Typed Trails by Kenichi Asai, Youyou Cong, Chiaki Isio
+		https://popl21.sigplan.org/details/pepm-2021-papers/4/A-Functional-Abstraction-of-Typed-Trails
+	A Functional Abstraction of Typed Contexts by Olivier Danvy, Andrzej Filinski
+		http://www.mpi-sws.org/~skilpat/plerg/papers/danvy-filinski-89-2up.pdf
+	A static simulation of dynamic delimited control by Chung-chieh Shan
+		http://homes.sice.indiana.edu/ccshan/recur/recur-hosc-final.pdf
+	Shift to control by Chung-chieh Shan
+		http://homes.sice.indiana.edu/ccshan/recur/recur.pdf
+	How to remove a dynamic prompt: static and dynamic delimited continuation operators are equally expressible by Oleg Kiselyov
+		https://legacy.cs.indiana.edu/ftp/techreports/TR611.pdf
+
 shift/reset
 	λx.e → λx.λk.e
 	x → k x
@@ -210,6 +222,10 @@ next steps
 	inferability of Types1 and Types4
 	multi-prompt continuations (in the style of Types3 (Shan) and/or Types4 (Kiselyov))
 	dynamic-wind in Types4 (see github.com/rain-1/continuations-study-group/wiki/Topics#dynamic-wind)
+	mixing Shan and Kiselyov style transforms
+	constraints on context
+	fcontrol-like
+	does Cont generalize all indexed monads?
 
 dynamic-wind
 	(define (go before th after)
@@ -221,6 +237,9 @@ dynamic-wind
 				(define reenter (shift k (make-yield (yield-v res) k)))
 				(go before (lambda () ((yield-k res) reenter)) after))
 			res))
+
+	(dw before inner after) → (begin before (dwa before inner after))
+	(dwa before C[(shift k e)] after) → (begin after (shift k' (let ((k (lambda (x) (k' (dw before C[x] after))))) e)))
 
 multiple prompts
 	(reset-mp tag C[(shift-mp tag f)])

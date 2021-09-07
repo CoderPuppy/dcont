@@ -33,6 +33,8 @@ reset :: CPS τ σ σ -> CPS α α τ
 reset (CPS e) = CPS \k -> k (e id)
 shift :: ((forall δ. τ -> CPS δ δ α) -> CPS β σ σ) -> CPS β α τ
 shift f = CPS \k -> runCPS (f \x -> ireturn (k x)) id
+tester :: forall δ. CPS δ δ ()
+tester = ireturn ()
 
 class Interp strat h β α where
 	type InterpV strat h β α :: Type
@@ -47,7 +49,7 @@ instance β ~ α => Interp 'Stop (HV τ) β α where
 instance
 	(
 		Interp 'Stop h β α,
-		k' ~ k, τ' ~ τ
+		k' ~ k, τ' ~ τ, β ~ α
 	) =>
 	Interp 'Stop (H k (k' -> CPS h (HV τ') τ)) β α
 	where
@@ -143,80 +145,101 @@ instance
 				dynamicWind before (k x) after >>>= \y ->
 				k' y
 
-{-
+-- {-
 test :: forall α. CPS α α String
-test = reset'
-	@'Stop
-	@(H _ (_ -> CPS (H _ ((_ -> CPS _ _ _) -> CPS _ (HV _) _)) (HV _) _))
-	-- @(H
-	-- 	(Int -> CPS
-	-- 		(H
-	-- 			(Int -> CPS (HV String) (HV String) Bool)
-	-- 			(
-	-- 				(Int -> CPS (HV String) (HV String) Bool) ->
-	-- 				CPS (HV String) (HV String) String
-	-- 			))
-	-- 		(HV Bool) Int)
-	-- 	(
-	-- 		(Int -> CPS
-	-- 			(H
-	-- 				(Int -> CPS (HV String) (HV String) Bool)
-	-- 				(
-	-- 					(Int -> CPS (HV String) (HV String) Bool) ->
-	-- 					CPS (HV String) (HV String) String
-	-- 				))
-	-- 			(HV Bool) Int) ->
-	-- 		CPS
-	-- 			(H
-	-- 				(Int -> CPS (HV String) (HV String) Bool)
-	-- 				(
-	-- 					(Int -> CPS (HV String) (HV String) Bool) ->
-	-- 					CPS (HV String) (HV String) String))
-	-- 			(HV Bool) Bool
-	-- 	))
-	(
-		shift' @'PropShift
-			(\f -> imap @CPS (== (0 :: Int)) $ f (5 :: Int))
-			>>>= \(a :: Int) ->
-		shift' @'PropShift
-			(\f -> imap @CPS (show :: Bool -> String) $ f (8 :: Int))
-			>>>= \(b :: Int) ->
-		ireturn @CPS (a + b)
-	)
+test =
+	tester @α >>>= \_ ->
+	reset'
+		@'Stop
+		-- @(H _ (_ -> CPS (H _ ((_ -> CPS _ _ _) -> CPS _ (HV _) _)) (HV _) _))
+		@(H
+			(Int -> CPS
+				(H
+					(Int -> CPS (HV String) (HV String) Bool)
+					(
+						(Int -> CPS (HV String) (HV String) Bool) ->
+						CPS (HV String) (HV String) String
+					))
+				(HV Bool) Int)
+			(
+				(Int -> CPS
+					(H
+						(Int -> CPS (HV String) (HV String) Bool)
+						(
+							(Int -> CPS (HV String) (HV String) Bool) ->
+							CPS (HV String) (HV String) String
+						))
+					(HV Bool) Int) ->
+				CPS
+					(H
+						(Int -> CPS (HV String) (HV String) Bool)
+						(
+							(Int -> CPS (HV String) (HV String) Bool) ->
+							CPS (HV String) (HV String) String))
+					(HV Bool) Bool
+			))
+		(
+			tester @(H (Int -> CPS (H (Int -> CPS (HV String) (HV String) Bool) ((Int -> CPS (HV String) (HV String) Bool) -> CPS (HV String) (HV String) String)) (HV Bool) Int) ((Int -> CPS (H (Int -> CPS (HV String) (HV String) Bool) ((Int -> CPS (HV String) (HV String) Bool) -> CPS (HV String) (HV String) String)) (HV Bool) Int) -> CPS (H (Int -> CPS (HV String) (HV String) Bool) ((Int -> CPS (HV String) (HV String) Bool) -> CPS (HV String) (HV String) String)) (HV Bool) Bool)) >>>= \_ ->
+			shift' @'PropShift
+				(\f ->
+					tester @(H (Int -> CPS (HV String) (HV String) Bool) ((Int -> CPS (HV String) (HV String) Bool) -> CPS (HV String) (HV String) String)) >>>= \_ ->
+					f (5 :: Int) >>>= \(v :: Int) ->
+					-- imap (== (0 :: Int)) $ f (5 :: Int)
+					tester @(HV Bool) >>>= \_ ->
+					ireturn (v == 0)
+					)
+				>>>= \(a :: Int) ->
+			tester @(H (Int -> CPS (HV String) (HV String) Int) ((Int -> CPS (HV String) (HV String) Bool) -> CPS (HV String) (HV String) String)) >>>= \_ ->
+			shift' @'PropShift
+				(\f ->
+					tester @(HV String) >>>= \_ ->
+					f (8 :: Int) >>>= \(v :: Bool) ->
+					-- imap (show :: Bool -> String) $ f (8 :: Int)
+					tester @(HV String) >>>= \_ ->
+					ireturn (show v)
+					)
+				>>>= \(b :: Int) ->
+			tester @(HV Int) >>>= \_ ->
+			ireturn @CPS (a + b)
+		)
+		>>>= \v ->
+	tester @α >>>= \_ ->
+	ireturn v
 
 test2 :: forall α. CPS α α (Int, Int)
-test2 = reset' @'PropReset
-	@(H
-		(Int -> CPS α α Int)
-		(
-			(Int -> CPS α α Int) ->
-			CPS α α (Int, Int)
-		))
-	(
-		reset'
-			@'PropReset
-			@(H
-				(Int -> CPS α α Int)
-				(
-					(Int -> CPS α α Int) ->
-					CPS
-						(H
-							(Int -> CPS α α Int)
-							(
-								(Int -> CPS α α Int) ->
-								CPS α α (Int, Int)
-							))
-						(HV Int)
-						Int
-				))
+test2 =
+	reset' @'PropReset
+		@(H
+			(Int -> CPS α α Int)
 			(
-				shift' @'Stop
-					(\k1 -> shift' @'Stop \k2 ->
-						k1 (3 :: Int) >>>= \(a :: Int) ->
-						k2 (4 :: Int) >>>= \(b :: Int) ->
-						ireturn @CPS (a, b))
-					>>>= \(b :: Int) -> ireturn @CPS (b * 100)
-			)
-			>>>= \(a :: Int) -> ireturn @CPS (a * 10)
-	)
+				(Int -> CPS α α Int) ->
+				CPS α α (Int, Int)
+			))
+		(
+			reset'
+				@'PropReset
+				@(H
+					(Int -> CPS α α Int)
+					(
+						(Int -> CPS α α Int) ->
+						CPS
+							(H
+								(Int -> CPS α α Int)
+								(
+									(Int -> CPS α α Int) ->
+									CPS α α (Int, Int)
+								))
+							(HV Int)
+							Int
+					))
+				(
+					shift' @'Stop
+						(\k1 -> shift' @'Stop \k2 ->
+							k1 (3 :: Int) >>>= \(a :: Int) ->
+							k2 (4 :: Int) >>>= \(b :: Int) ->
+							ireturn @CPS (a, b))
+						>>>= \(b :: Int) -> ireturn @CPS (b * 100)
+				)
+				>>>= \(a :: Int) -> ireturn @CPS (a * 10)
+		)
 -- -}

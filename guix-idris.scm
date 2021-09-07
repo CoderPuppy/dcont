@@ -93,6 +93,8 @@
 
 (define idris2-boot-0.2.1 (make-idris2 "0.2.1" "1izw68vnic9rh5yzvq85f9bm9qnkbdiipfqymgq04a2rr59n5qbv" idris2-boot "idris2boot"))
 (define idris2 (make-idris2 "0.2.1" "1izw68vnic9rh5yzvq85f9bm9qnkbdiipfqymgq04a2rr59n5qbv" idris2-boot-0.2.1 "idris2"))
+; (define idris2-boot-0.2.2 (make-idris2 "0.2.2" "05yrf0bi5h1zsx1w7c8xwg5kfyj4k4v90idmbzgfr3zrlvnlwg0i" idris2-boot "idris2boot"))
+; (define idris2 (make-idris2 "0.3.0" "0x0vgfh1fc5my3ajqc31db3b3bdj34rsjyb5jclwdvj67cf946ib" idris2-boot-0.2.2 "idris2"))
 
 (packages->manifest (list
 	idris idris-lens

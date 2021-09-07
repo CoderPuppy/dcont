@@ -53,20 +53,18 @@ instance
 instance Cons '[] μ μ where
 	-- this actually comes from append
 	cons TNull t = t
-unwrap :: (forall α. CPS α α a) -> a
-unwrap e = runCPS e id
 prompt ::
   forall μid β β' τ α.
   KId β β' μid =>
   CPS (Trailed τ '[]) (Trailed β' μid) β ->
   CPS α α τ
-prompt e = shift \k -> reset (e >>>= runK kId) >>>= flip runTrailed TNull >>>= k
+prompt e = reset (e >>>= runK kId) >>>= flip runTrailed TNull
 control ::
 	forall
 		μ₀
 		μid μα
     γ' γ -- μid
-		μ₂ μ₁ τ₂ τ₁
+		μ₂ μ₁ τ₂ τ
 		μβ β {- μα -} α τ.
   (
     KId γ γ' μid,
