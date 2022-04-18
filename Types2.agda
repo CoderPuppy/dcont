@@ -2,6 +2,8 @@
 
 module Types2 where
 
+-- attempting to prove equivalence of all my type experiments
+
 data ⊤ : Set where
   unit : ⊤
 
@@ -57,7 +59,7 @@ module TypeJudge (⊢_∷_ : {A : Set} → A → Type → Set) where
       ⊢ x ∷ τ →
       Γ ⊢ lift x ∷ τ [ γ ⇒ γ ]
 
-module Trails where
+module Shan3 where
   data Trailed : Type → List (Type × Type) → Set where
 
   data ⊢kId : Type → Type → List (Type × Type) → Set where
@@ -100,7 +102,7 @@ module Trails where
 
   open TypeJudge (⊢_∷_)
 
-module T5 where
+module Kiselyov2 where
   data Hw : Set where
     H : Type → Hw
     HV : Type → Hw
@@ -150,7 +152,7 @@ module T5 where
 
   open TypeJudge (⊢_∷_)
 
-module T6 where
+module Kiselyov3 where
   data Strat : Set where
     Stop PropShift : Strat
 
@@ -205,7 +207,7 @@ module T6 where
 
   open TypeJudge (⊢_∷_)
 
-module T7 where
+module Kiselyov4 where
   data Strat : Set where
     Stop PropShift : Strat
 

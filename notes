@@ -226,6 +226,7 @@ next steps
 	constraints on context
 	fcontrol-like
 	does Cont generalize all indexed monads?
+	linear types
 
 dynamic-wind
 	(define (go before th after)

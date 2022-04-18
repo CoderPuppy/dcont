@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wno-tabs #-}
 {-# LANGUAGE BlockArguments, LambdaCase, GADTs, PolyKinds, DataKinds, TypeOperators, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts, ScopedTypeVariables, TypeApplications, UndecidableInstances, AllowAmbiguousTypes #-}
 
-module Types1 where
+module TypesShan1 where
 
 import Data.Kind
 

@@ -1,5 +1,7 @@
 module Types
 
+-- attempting to prove equivalence of Types1 and Types6
+
 import Data.Fin
 import Data.Vect
 
@@ -9,7 +11,7 @@ data Term : Nat -> Type where
 	App : Term n -> Term n -> Term n
 	Prompt : Term n -> Term n
 	Control : Term (S n) -> Term n
-	
+
 	IntLit : Int -> Term n
 	IntAdd : Term n -> Term n -> Term n
 

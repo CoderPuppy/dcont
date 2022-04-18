@@ -3,6 +3,8 @@
 
 module IndexedMonad5 where
 
+-- Does the CPS indexed monad generalize all indexed monads?
+
 import Control.Monad.Indexed
 
 newtype CPS β α τ = CPS { runCPS :: (τ -> α) -> β }

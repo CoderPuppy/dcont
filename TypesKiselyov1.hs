@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -Wno-tabs #-}
 {-# LANGUAGE BlockArguments, LambdaCase, GADTs, PolyKinds, DataKinds, TypeOperators, TypeFamilies, FlexibleInstances, MultiParamTypeClasses, FunctionalDependencies, FlexibleContexts, ScopedTypeVariables, TypeApplications, AllowAmbiguousTypes, RankNTypes #-}
 
-module Types4 where
+module TypesKiselyov1 where
 
 import Control.Monad.Indexed
 import Data.Kind
